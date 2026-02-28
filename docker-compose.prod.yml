@@ -1,0 +1,15 @@
+# 本番環境用オーバーライド
+# 使用方法: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  caddy:
+    volumes:
+      - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  db:
+    ports: !reset []  # 本番ではポートを外部に公開しない
+
+  cache:
+    ports: !reset []  # 本番ではポートを外部に公開しない

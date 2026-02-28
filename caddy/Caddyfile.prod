@@ -1,0 +1,14 @@
+# 本番環境用（自動HTTPS）
+# DOMAIN 環境変数を参照: docker compose run --env DOMAIN=your-domain.com
+{$DOMAIN} {
+    reverse_proxy app:8000
+
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        -Server
+    }
+}

@@ -1,0 +1,7 @@
+{% extends "base" %}
+
+{% block title %}my-6-games - 私を構成する6つのゲーム{% endblock %}
+
+{% block content %}
+<h1>準備中...</h1>
+{% endblock %}
