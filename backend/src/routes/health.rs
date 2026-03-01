@@ -17,7 +17,7 @@ pub async fn health(
     let redis_ok = {
         let mut conn = redis.inner().clone();
         redis::cmd("PING")
-            .query_async::<_, String>(&mut conn)
+            .query_async::<String>(&mut conn)
             .await
             .is_ok()
     };

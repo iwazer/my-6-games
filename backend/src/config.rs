@@ -6,6 +6,7 @@ pub struct AppConfig {
     pub redis_url: String,
     pub twitch_client_id: String,
     pub twitch_client_secret: String,
+    #[allow(dead_code)] // Phase 4 で OGP・共有URL生成に使用予定
     pub base_url: String,
 }
 

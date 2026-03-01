@@ -11,7 +11,7 @@ path = "src/main.rs"
 rocket = { version = "0.5", features = ["json"] }
 rocket_dyn_templates = { version = "0.2", features = ["tera"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "mysql", "chrono", "json", "macros"] }
-redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.26", features = ["tokio-comp", "connection-manager"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
@@ -21,3 +21,4 @@ rand = "0.8"
 thiserror = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.12", features = ["json"] }
