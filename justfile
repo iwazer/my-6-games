@@ -45,6 +45,10 @@ health:
 search q:
     curl -s "http://localhost/api/games/search?q={{q}}"
 
+# 共有を取得（例: just share-get a1b2c3d4e5f67890）
+share-get id:
+    curl -s "http://localhost/api/shares/{{id}}"
+
 # ===== Redis =====
 
 # Redis の全キーを表示

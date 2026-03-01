@@ -20,6 +20,12 @@ async fn rocket() -> _ {
     let redis_conn = cache::create_connection_manager(&cfg.redis_url).await;
     let igdb = IgdbClient::new(&cfg, redis_conn.clone());
 
+    // 起動時に期限切れの共有データを削除
+    sqlx::query("DELETE FROM shares WHERE expires_at < NOW()")
+        .execute(&db_pool)
+        .await
+        .ok();
+
     rocket::build()
         .manage(cfg)
         .manage(db_pool)
@@ -27,5 +33,12 @@ async fn rocket() -> _ {
         .manage(igdb)
         .attach(Template::fairing())
         .mount("/", routes![routes::health::health])
-        .mount("/api", routes![routes::games::search_games])
+        .mount(
+            "/api",
+            routes![
+                routes::games::search_games,
+                routes::shares::create_share,
+                routes::shares::get_share,
+            ],
+        )
 }

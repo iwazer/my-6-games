@@ -1,30 +1,12 @@
-use std::net::IpAddr;
-
 use redis::aio::ConnectionManager;
 use rocket::http::Status;
-use rocket::request::{self, FromRequest, Request};
 use rocket::serde::json::{json, Json};
 use rocket::State;
 use serde_json::Value;
 
+use crate::routes::ClientIp;
 use crate::services::igdb::{IgdbClient, IgdbError};
 use crate::services::rate_limit::{self, RateLimitResult};
-
-/// Caddy (X-Forwarded-For) 経由でクライアント IP を取得するリクエストガード
-pub struct ClientIp(pub IpAddr);
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for ClientIp {
-    type Error = ();
-
-    async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, ()> {
-        let ip = req
-            .real_ip()
-            .or_else(|| req.client_ip())
-            .unwrap_or(IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
-        request::Outcome::Success(ClientIp(ip))
-    }
-}
 
 /// GET /api/games/search?q=<query>&limit=<n>
 ///
