@@ -285,9 +285,6 @@ mod tests {
 
     #[test]
     fn escape_query_both_special_chars() {
-        assert_eq!(
-            escape_igdb_query(r#"a\"b"#),
-            r#"a\\\"b"#
-        );
+        assert_eq!(escape_igdb_query(r#"a\"b"#), r#"a\\\"b"#);
     }
 }

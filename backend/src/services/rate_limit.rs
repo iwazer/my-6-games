@@ -14,10 +14,7 @@ pub async fn check(
 ) -> redis::RedisResult<RateLimitResult> {
     let mut conn = redis.clone();
 
-    let count: i64 = redis::cmd("INCR")
-        .arg(key)
-        .query_async(&mut conn)
-        .await?;
+    let count: i64 = redis::cmd("INCR").arg(key).query_async(&mut conn).await?;
 
     if count == 1 {
         // 最初のリクエストでウィンドウの TTL をセット

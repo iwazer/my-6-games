@@ -5,14 +5,8 @@ use serde_json::Value;
 use sqlx::MySqlPool;
 
 #[get("/health")]
-pub async fn health(
-    db: &State<MySqlPool>,
-    redis: &State<ConnectionManager>,
-) -> Json<Value> {
-    let db_ok = sqlx::query("SELECT 1")
-        .execute(db.inner())
-        .await
-        .is_ok();
+pub async fn health(db: &State<MySqlPool>, redis: &State<ConnectionManager>) -> Json<Value> {
+    let db_ok = sqlx::query("SELECT 1").execute(db.inner()).await.is_ok();
 
     let redis_ok = {
         let mut conn = redis.inner().clone();

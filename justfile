@@ -26,6 +26,18 @@ ps:
 
 # ===== 開発 =====
 
+# コードをフォーマット（rustfmt）
+fmt:
+    cd backend && cargo fmt
+
+# フォーマットチェックのみ（CI 用、ファイルを変更しない）
+fmt-check:
+    cd backend && cargo fmt --check
+
+# Linter を実行（clippy、警告をエラーとして扱う）
+lint:
+    cd backend && cargo clippy -- -D warnings
+
 # 単体テストを実行（Docker 内で cargo test）
 test:
     docker run --rm \

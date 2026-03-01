@@ -23,8 +23,7 @@ pub async fn search_games(
 ) -> (Status, Json<Value>) {
     // レート制限チェック（Redis エラー時はスキップ）
     let rate_key = format!("ratelimit:search:{}", client_ip.0);
-    if let Ok(RateLimitResult::Exceeded) =
-        rate_limit::check(redis.inner(), &rate_key, 60, 60).await
+    if let Ok(RateLimitResult::Exceeded) = rate_limit::check(redis.inner(), &rate_key, 60, 60).await
     {
         return (
             Status::TooManyRequests,

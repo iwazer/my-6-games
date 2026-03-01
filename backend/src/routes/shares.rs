@@ -332,7 +332,9 @@ mod tests {
     #[test]
     fn id_is_lowercase_hex() {
         let id = generate_id();
-        assert!(id.chars().all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()));
+        assert!(id
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_uppercase()));
     }
 
     #[test]
