@@ -3,5 +3,246 @@
 {% block title %}my-6-games - 私を構成する6つのゲーム{% endblock %}
 
 {% block content %}
-<h1>準備中...</h1>
+<div x-data="gameSelector()" x-cloak>
+
+  <div class="text-center mb-10">
+    <h1 class="text-3xl font-bold text-purple-400 mb-3">私を構成する6つのゲーム</h1>
+    <p class="text-gray-400">人生に影響を与えた6本のゲームを選んで、共有ページを作ろう</p>
+  </div>
+
+  <!-- 作成者名 -->
+  <div class="mb-8">
+    <label class="block text-sm font-medium text-gray-300 mb-1">あなたの名前（任意・40文字まで）</label>
+    <input
+      type="text"
+      x-model="creator"
+      maxlength="40"
+      placeholder="名無し"
+      class="w-full max-w-sm bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+    >
+  </div>
+
+  <!-- 選択済みゲーム -->
+  <div class="mb-8">
+    <h2 class="text-lg font-semibold text-gray-200 mb-3">
+      選択中のゲーム
+      <span class="text-gray-400 font-normal text-sm" x-text="`(${games.length}/6)`"></span>
+    </h2>
+    <div class="space-y-3">
+      <template x-for="(game, index) in games" :key="game.igdb_id">
+        <div class="flex gap-3 bg-gray-800 rounded-lg p-3 items-start border border-gray-700">
+          <!-- カバー画像 -->
+          <div class="flex-shrink-0 w-14 h-[4.5rem] bg-gray-700 rounded overflow-hidden">
+            <img
+              x-show="game.cover_url"
+              :src="game.cover_url"
+              :alt="game.name"
+              class="w-full h-full object-cover"
+            >
+            <div
+              x-show="!game.cover_url"
+              class="w-full h-full flex items-center justify-center text-gray-500 text-xs text-center p-1"
+            >No Image</div>
+          </div>
+          <!-- ゲーム情報 -->
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-white truncate" x-text="game.name"></div>
+            <div class="text-xs text-gray-400 mb-2" x-show="game.release_year" x-text="game.release_year + '年'"></div>
+            <textarea
+              x-model="game.comment"
+              maxlength="140"
+              rows="2"
+              placeholder="一言コメント（任意・140文字まで）"
+              class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none transition-colors"
+            ></textarea>
+            <label class="flex items-center gap-2 mt-1.5 cursor-pointer select-none">
+              <input type="checkbox" x-model="game.is_spoiler" class="rounded border-gray-600 bg-gray-700 accent-purple-500">
+              <span class="text-xs text-gray-400">ネタバレあり（共有ページで折り畳み表示）</span>
+            </label>
+          </div>
+          <!-- 削除ボタン -->
+          <button
+            @click="removeGame(index)"
+            class="flex-shrink-0 text-gray-500 hover:text-red-400 transition-colors p-0.5"
+            title="削除"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </template>
+
+      <!-- 空きスロット -->
+      <template x-for="i in (6 - games.length)" :key="'empty-' + i">
+        <div class="border-2 border-dashed border-gray-800 rounded-lg p-4 text-center text-gray-600 text-sm">
+          ゲームを検索して追加してください
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- ゲーム検索 -->
+  <div class="mb-8 relative" x-show="games.length < 6">
+    <label class="block text-sm font-medium text-gray-300 mb-1">ゲームを検索</label>
+    <div class="relative">
+      <input
+        type="text"
+        x-model="query"
+        @input="debounceSearch()"
+        @keydown.escape="results = []"
+        placeholder="ゲーム名で検索（例: ゼルダ、Minecraft、FF7）"
+        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+      >
+      <div x-show="searching" class="absolute right-3 top-2.5">
+        <div class="animate-spin h-5 w-5 border-2 border-purple-400 border-t-transparent rounded-full"></div>
+      </div>
+    </div>
+
+    <!-- 検索結果ドロップダウン -->
+    <div
+      x-show="results.length > 0"
+      @click.outside="results = []"
+      class="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl overflow-hidden"
+    >
+      <template x-for="game in results" :key="game.igdb_id">
+        <button
+          @click="addGame(game)"
+          :disabled="isSelected(game) || games.length >= 6"
+          class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-left"
+        >
+          <div class="flex-shrink-0 w-9 h-12 bg-gray-700 rounded overflow-hidden">
+            <img
+              x-show="game.cover_url"
+              :src="game.cover_url"
+              class="w-full h-full object-cover"
+            >
+            <div x-show="!game.cover_url" class="w-full h-full flex items-center justify-center text-gray-600 text-xs">?</div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-white truncate" x-text="game.name"></div>
+            <div class="text-xs text-gray-400" x-text="game.release_year ? game.release_year + '年' : ''"></div>
+          </div>
+          <div x-show="isSelected(game)" class="text-xs text-purple-400 flex-shrink-0">追加済</div>
+        </button>
+      </template>
+    </div>
+  </div>
+
+  <!-- エラーメッセージ -->
+  <div
+    x-show="error"
+    class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm"
+    x-text="error"
+  ></div>
+
+  <!-- 作成ボタン -->
+  <div class="text-center">
+    <button
+      @click="submit()"
+      :disabled="!canSubmit"
+      class="px-8 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+    >
+      <span x-show="!submitting">共有ページを作成</span>
+      <span x-show="submitting" class="flex items-center gap-2">
+        <span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full inline-block"></span>
+        作成中...
+      </span>
+    </button>
+    <p x-show="games.length < 6" class="text-sm text-gray-500 mt-2">
+      6本のゲームを選択してください（現在 <span x-text="games.length"></span>本）
+    </p>
+  </div>
+
+</div>
+
+<script>
+function gameSelector() {
+  return {
+    creator: '',
+    games: [],
+    query: '',
+    results: [],
+    searching: false,
+    timer: null,
+    error: null,
+    submitting: false,
+
+    get canSubmit() {
+      return this.games.length === 6 && !this.submitting;
+    },
+
+    isSelected(game) {
+      return this.games.some(g => g.igdb_id === game.igdb_id);
+    },
+
+    debounceSearch() {
+      clearTimeout(this.timer);
+      if (this.query.length < 2) {
+        this.results = [];
+        return;
+      }
+      this.timer = setTimeout(() => this.doSearch(), 400);
+    },
+
+    async doSearch() {
+      this.searching = true;
+      try {
+        const res = await fetch(`/api/games/search?q=${encodeURIComponent(this.query)}&limit=10`);
+        const data = await res.json();
+        this.results = data.games || [];
+      } catch (e) {
+        this.results = [];
+      } finally {
+        this.searching = false;
+      }
+    },
+
+    addGame(game) {
+      if (this.games.length >= 6 || this.isSelected(game)) return;
+      this.games.push({ ...game, comment: '', is_spoiler: false });
+      this.query = '';
+      this.results = [];
+    },
+
+    removeGame(index) {
+      this.games.splice(index, 1);
+    },
+
+    async submit() {
+      if (!this.canSubmit) return;
+      this.submitting = true;
+      this.error = null;
+      try {
+        const res = await fetch('/api/shares', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            creator: this.creator || null,
+            games: this.games.map(g => ({
+              igdb_id: g.igdb_id,
+              name: g.name,
+              cover_url: g.cover_url || null,
+              release_year: g.release_year || null,
+              platforms: g.platforms || [],
+              comment: g.comment || null,
+              is_spoiler: g.is_spoiler,
+            })),
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          window.location.href = data.url;
+        } else {
+          this.error = data.error || '作成に失敗しました';
+        }
+      } catch (e) {
+        this.error = 'ネットワークエラーが発生しました';
+      } finally {
+        this.submitting = false;
+      }
+    },
+  };
+}
+</script>
 {% endblock %}

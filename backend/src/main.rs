@@ -32,7 +32,14 @@ async fn rocket() -> _ {
         .manage(redis_conn)
         .manage(igdb)
         .attach(Template::fairing())
-        .mount("/", routes![routes::health::health])
+        .mount(
+            "/",
+            routes![
+                routes::health::health,
+                routes::pages::index,
+                routes::pages::share_page,
+            ],
+        )
         .mount(
             "/api",
             routes![

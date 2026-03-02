@@ -3,9 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% block head %}{% endblock %}
   <title>{% block title %}my-6-games{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
 </head>
-<body>
-  {% block content %}{% endblock %}
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+  <header class="border-b border-gray-800 px-4 py-3">
+    <a href="/" class="text-xl font-bold text-purple-400 hover:text-purple-300 transition-colors">my-6-games</a>
+  </header>
+  <main class="container mx-auto px-4 py-8 max-w-4xl">
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>

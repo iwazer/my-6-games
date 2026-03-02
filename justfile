@@ -38,14 +38,9 @@ fmt-check:
 lint:
     cd backend && cargo clippy -- -D warnings
 
-# 単体テストを実行（Docker 内で cargo test）
+# 単体テストを実行
 test:
-    docker run --rm \
-        -v "$(pwd)/backend:/app" \
-        -w /app \
-        rust:1.93-slim \
-        sh -c "apt-get update -qq && apt-get install -y -qq pkg-config libssl-dev 2>/dev/null \
-               && cargo test 2>&1"
+    cd backend && cargo test
 
 # ===== 動作確認 =====
 

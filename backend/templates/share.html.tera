@@ -2,6 +2,125 @@
 
 {% block title %}{{ creator }}の6つのゲーム | my-6-games{% endblock %}
 
+{% block head %}
+<meta property="og:title" content="{{ creator }}の6つのゲーム | my-6-games">
+<meta property="og:description" content="{{ og_description }}">
+<meta property="og:image" content="{{ base_url }}/api/shares/{{ share_id }}/image">
+<meta property="og:url" content="{{ share_url }}">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
 {% block content %}
-<h1>{{ creator }}の6つのゲーム</h1>
+<div class="text-center mb-8">
+  <h1 class="text-2xl font-bold text-white">
+    <span class="text-purple-400">{{ creator }}</span>を構成する6つのゲーム
+  </h1>
+</div>
+
+<!-- 6本グリッド -->
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+  {% for game in games %}
+  <div
+    class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700"
+    x-data="{ shown: {{ not game.is_spoiler }} }"
+  >
+    <!-- カバー画像エリア -->
+    <div class="relative" style="aspect-ratio: 3/4;">
+      {% if game.cover_url %}
+      <img src="{{ game.cover_url }}" alt="{{ game.name }}" class="w-full h-full object-cover">
+      {% else %}
+      <div class="w-full h-full bg-gray-700 flex items-center justify-center text-gray-500 text-sm p-4 text-center">
+        {{ game.name }}
+      </div>
+      {% endif %}
+
+      {% if game.is_spoiler %}
+      <!-- スポイラーオーバーレイ -->
+      <div
+        x-show="!shown"
+        @click="shown = true"
+        class="absolute inset-0 bg-gray-900/95 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-900/80 transition-colors"
+      >
+        <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+        </svg>
+        <span class="text-gray-400 text-xs font-medium">ネタバレあり</span>
+        <span class="text-gray-500 text-xs mt-0.5">クリックで表示</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ゲーム情報（非スポイラー or 表示後） -->
+    <div class="p-3" x-show="shown" {% if game.is_spoiler %}x-cloak{% endif %}>
+      <div class="font-medium text-white text-sm leading-tight mb-1">{{ game.name }}</div>
+      {% if game.release_year %}
+      <div class="text-xs text-gray-400 mb-2">{{ game.release_year }}年</div>
+      {% endif %}
+      {% if game.comment %}
+      <p class="text-xs text-gray-300 leading-relaxed border-l-2 border-purple-700 pl-2 mt-2">{{ game.comment }}</p>
+      {% endif %}
+    </div>
+
+    <!-- スポイラー時の折り畳み表示 -->
+    {% if game.is_spoiler %}
+    <div class="p-3" x-show="!shown">
+      <div class="text-gray-500 text-sm italic">ネタバレあり</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- アクションボタン -->
+<div class="flex flex-col items-center gap-4">
+
+  <!-- SNS シェアボタン -->
+  <div class="flex gap-3 flex-wrap justify-center">
+    <a
+      href="https://x.com/intent/tweet?text={{ tweet_text | urlencode }}&url={{ share_url | urlencode }}"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-900 border border-gray-700 text-white rounded-lg transition-colors text-sm font-medium"
+    >
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.732-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+      X でシェア
+    </a>
+    <a
+      href="https://bsky.app/intent/compose?text={{ bsky_text | urlencode }}"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-medium"
+    >
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.204-.659-.3-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/>
+      </svg>
+      Bluesky でシェア
+    </a>
+  </div>
+
+  <!-- 画像ダウンロード（Phase 5 で実装） -->
+  <a
+    href="/api/shares/{{ share_id }}/image"
+    class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 rounded-lg transition-colors text-sm cursor-not-allowed opacity-60"
+    title="画像生成は Phase 5 で実装予定"
+    onclick="return false;"
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+    </svg>
+    画像をダウンロード（準備中）
+  </a>
+
+  <!-- 自分も作るボタン -->
+  <a
+    href="/"
+    class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-lg transition-colors"
+  >
+    自分も作る →
+  </a>
+
+</div>
 {% endblock %}

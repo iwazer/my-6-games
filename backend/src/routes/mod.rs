@@ -1,5 +1,6 @@
 pub mod games;
 pub mod health;
+pub mod pages;
 pub mod shares;
 
 use std::net::IpAddr;
