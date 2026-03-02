@@ -1,3 +1,5 @@
+set dotenv-load
+
 # デフォルト: タスク一覧を表示
 default:
     @just --list
@@ -56,11 +58,20 @@ search q:
 share-get id:
     curl -s "http://localhost/api/shares/{{id}}"
 
+# 直近 5 件の共有 ID を表示
+latest-id:
+    docker compose exec db mariadb -u my6games -p${DB_PASSWORD:-password} my6games \
+        -e "SELECT id, creator, created_at FROM shares ORDER BY created_at DESC LIMIT 5;"
+
 # ===== Redis =====
 
 # Redis の全キーを表示
 redis-keys:
     docker compose exec cache redis-cli KEYS "*"
+
+# 共有の画像キャッシュを削除（例: just redis-del-image a1b2c3d4e5f67890）
+redis-del-image id:
+    docker compose exec cache redis-cli DEL "share:image:{{id}}"
 
 # Redis キャッシュを全削除
 redis-flush:

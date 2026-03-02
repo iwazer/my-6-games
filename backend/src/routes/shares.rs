@@ -1,6 +1,6 @@
 use chrono::{Duration, TimeZone, Utc};
 use redis::aio::ConnectionManager;
-use rocket::http::Status;
+use rocket::http::{ContentType, Status};
 use rocket::serde::json::{json, Json};
 use rocket::State;
 use serde::Deserialize;
@@ -9,6 +9,7 @@ use sqlx::{MySqlPool, Row};
 
 use crate::models::share::{Share, ShareGame};
 use crate::routes::ClientIp;
+use crate::services::image::ImageService;
 use crate::services::rate_limit::{self, RateLimitResult};
 
 const INITIAL_DAYS: i64 = 30;
@@ -298,6 +299,159 @@ pub async fn get_share(
     cache_share(&share, redis.inner()).await;
 
     (Status::Ok, Json(json!(share)))
+}
+
+/// GET /api/shares/<id>/image — OGP 用 PNG 画像（1200×630）を返す
+///
+/// - Redis `share:image:<id>` にキャッシュがあれば即返却
+/// - キャッシュミス時は PNG を生成して Redis に保存（TTL = 残り有効期限）
+#[get("/shares/<id>/image")]
+pub async fn share_image(
+    id: &str,
+    db: &State<MySqlPool>,
+    redis: &State<ConnectionManager>,
+    image_svc: &State<ImageService>,
+) -> Result<(ContentType, Vec<u8>), Status> {
+    let cache_key = format!("share:image:{id}");
+
+    // Redis キャッシュ確認
+    {
+        let mut conn = redis.inner().clone();
+        if let Ok(cached) = redis::cmd("GET")
+            .arg(&cache_key)
+            .query_async::<Vec<u8>>(&mut conn)
+            .await
+        {
+            if !cached.is_empty() {
+                return Ok((ContentType::PNG, cached));
+            }
+        }
+    }
+
+    // Share 取得（accessed_at 更新なし）
+    let share = fetch_share_for_image(id, db.inner(), redis.inner())
+        .await
+        .map_err(|_| Status::NotFound)?;
+
+    // PNG 生成
+    let png_bytes = image_svc.generate_png(&share).await.map_err(|e| {
+        eprintln!("image generation error: {e}");
+        Status::InternalServerError
+    })?;
+
+    // Redis にキャッシュ（残り TTL 秒）
+    let ttl = (share.expires_at - Utc::now()).num_seconds().max(0) as usize;
+    if ttl > 0 {
+        let mut conn = redis.inner().clone();
+        let _: Result<(), _> = redis::cmd("SETEX")
+            .arg(&cache_key)
+            .arg(ttl)
+            .arg(png_bytes.as_slice())
+            .query_async::<()>(&mut conn)
+            .await;
+    }
+
+    Ok((ContentType::PNG, png_bytes))
+}
+
+/// GET /api/shares/<id>/image/ogp — OGP 用横長 PNG（1200×628）を返す
+///
+/// Twitter summary_large_image に最適化した横長フォーマット
+#[get("/shares/<id>/image/ogp")]
+pub async fn share_image_ogp(
+    id: &str,
+    db: &State<MySqlPool>,
+    redis: &State<ConnectionManager>,
+    image_svc: &State<ImageService>,
+) -> Result<(ContentType, Vec<u8>), Status> {
+    let cache_key = format!("share:image:ogp:{id}");
+
+    // Redis キャッシュ確認
+    {
+        let mut conn = redis.inner().clone();
+        if let Ok(cached) = redis::cmd("GET")
+            .arg(&cache_key)
+            .query_async::<Vec<u8>>(&mut conn)
+            .await
+        {
+            if !cached.is_empty() {
+                return Ok((ContentType::PNG, cached));
+            }
+        }
+    }
+
+    // Share 取得（accessed_at 更新なし）
+    let share = fetch_share_for_image(id, db.inner(), redis.inner())
+        .await
+        .map_err(|_| Status::NotFound)?;
+
+    // OGP 用 PNG 生成
+    let png_bytes = image_svc.generate_png_ogp(&share).await.map_err(|e| {
+        eprintln!("OGP image generation error: {e}");
+        Status::InternalServerError
+    })?;
+
+    // Redis にキャッシュ（残り TTL 秒）
+    let ttl = (share.expires_at - Utc::now()).num_seconds().max(0) as usize;
+    if ttl > 0 {
+        let mut conn = redis.inner().clone();
+        let _: Result<(), _> = redis::cmd("SETEX")
+            .arg(&cache_key)
+            .arg(ttl)
+            .arg(png_bytes.as_slice())
+            .query_async::<()>(&mut conn)
+            .await;
+    }
+
+    Ok((ContentType::PNG, png_bytes))
+}
+
+/// 画像生成用に Share を取得する（accessed_at・expires_at は更新しない）
+async fn fetch_share_for_image(
+    id: &str,
+    db: &MySqlPool,
+    redis: &ConnectionManager,
+) -> Result<Share, ()> {
+    // Redis キャッシュ確認
+    {
+        let mut conn = redis.clone();
+        if let Ok(cached) = redis::cmd("GET")
+            .arg(format!("share:{id}"))
+            .query_async::<String>(&mut conn)
+            .await
+        {
+            if let Ok(share) = serde_json::from_str::<Share>(&cached) {
+                return Ok(share);
+            }
+        }
+    }
+
+    // DB から取得（期限切れは除外）
+    let row = sqlx::query(
+        "SELECT id, creator, games_json, created_at, expires_at \
+         FROM shares WHERE id = ? AND expires_at > NOW()",
+    )
+    .bind(id)
+    .fetch_optional(db)
+    .await
+    .map_err(|_| ())?
+    .ok_or(())?;
+
+    let share_id: String = row.try_get("id").map_err(|_| ())?;
+    let creator: Option<String> = row.try_get("creator").ok().flatten();
+    let games_json: String = row.try_get("games_json").map_err(|_| ())?;
+    let created_at_naive: chrono::NaiveDateTime = row.try_get("created_at").map_err(|_| ())?;
+    let expires_at_naive: chrono::NaiveDateTime = row.try_get("expires_at").map_err(|_| ())?;
+
+    let games: Vec<ShareGame> = serde_json::from_str(&games_json).map_err(|_| ())?;
+
+    Ok(Share {
+        id: share_id,
+        creator,
+        games,
+        created_at: Utc.from_utc_datetime(&created_at_naive),
+        expires_at: Utc.from_utc_datetime(&expires_at_naive),
+    })
 }
 
 /// Redis に share データをキャッシュする（失敗しても無視）

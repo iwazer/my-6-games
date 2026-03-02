@@ -5,7 +5,7 @@
 {% block head %}
 <meta property="og:title" content="{{ creator }}の6つのゲーム | my-6-games">
 <meta property="og:description" content="{{ og_description }}">
-<meta property="og:image" content="{{ base_url }}/api/shares/{{ share_id }}/image">
+<meta property="og:image" content="{{ base_url }}/api/shares/{{ share_id }}/image/ogp">
 <meta property="og:url" content="{{ share_url }}">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
