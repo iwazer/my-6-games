@@ -22,6 +22,8 @@ const RATE_WINDOW: i64 = 3600; // 1h
 pub struct GameInput {
     pub igdb_id: i64,
     pub name: String,
+    #[serde(default)]
+    pub original_name: Option<String>,
     pub cover_url: Option<String>,
     pub release_year: Option<i32>,
     #[serde(default)]
@@ -120,6 +122,7 @@ pub async fn create_share(
         .map(|g| ShareGame {
             igdb_id: g.igdb_id,
             name: g.name.clone(),
+            original_name: g.original_name.clone(),
             cover_url: g.cover_url.clone(),
             release_year: g.release_year,
             platforms: g.platforms.clone(),

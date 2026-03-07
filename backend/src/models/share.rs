@@ -6,6 +6,9 @@ use serde::{Deserialize, Serialize};
 pub struct ShareGame {
     pub igdb_id: i64,
     pub name: String,
+    /// IGDB から取得した元のタイトル。ユーザーが name を変更した場合にのみ Some になる。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_name: Option<String>,
     pub cover_url: Option<String>,
     pub release_year: Option<i32>,
     pub platforms: Vec<String>,

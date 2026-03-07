@@ -312,6 +312,7 @@ mod tests {
                 .map(|i| ShareGame {
                     igdb_id: i,
                     name: format!("Test Game {i}"),
+                    original_name: None,
                     cover_url: None,
                     release_year: Some(2020 + i as i32),
                     platforms: vec![],
