@@ -304,7 +304,7 @@ pub async fn get_share(
     (Status::Ok, Json(json!(share)))
 }
 
-/// GET /api/shares/<id>/image — OGP 用 PNG 画像（1200×630）を返す
+/// GET /api/shares/<id>/image — 共有用 PNG 画像
 ///
 /// - Redis `share:image:<id>` にキャッシュがあれば即返却
 /// - キャッシュミス時は PNG を生成して Redis に保存（TTL = 残り有効期限）
