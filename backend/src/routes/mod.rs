@@ -1,3 +1,4 @@
+pub mod errors;
 pub mod games;
 pub mod health;
 pub mod pages;

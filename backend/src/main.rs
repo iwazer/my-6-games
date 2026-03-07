@@ -53,4 +53,12 @@ async fn rocket() -> _ {
                 routes::shares::share_image_ogp,
             ],
         )
+        .register(
+            "/",
+            catchers![
+                routes::errors::not_found,
+                routes::errors::unprocessable,
+                routes::errors::internal_error,
+            ],
+        )
 }
