@@ -23,10 +23,10 @@
   {% for game in games %}
   <div
     class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700"
-    x-data="{ shown: {{ not game.is_spoiler }} }"
+    {% if game.is_spoiler and game.comment %}x-data="{ shown: false }"{% endif %}
   >
-    <!-- カバー画像エリア -->
-    <div class="relative" style="aspect-ratio: 3/4;">
+    <!-- カバー画像エリア（常時表示） -->
+    <div style="aspect-ratio: 3/4;">
       {% if game.cover_url %}
       <img src="{{ game.cover_url }}" alt="{{ game.name }}" class="w-full h-full object-cover">
       {% else %}
@@ -34,40 +34,26 @@
         {{ game.name }}
       </div>
       {% endif %}
-
-      {% if game.is_spoiler %}
-      <!-- スポイラーオーバーレイ -->
-      <div
-        x-show="!shown"
-        @click="shown = true"
-        class="absolute inset-0 bg-gray-900/95 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-900/80 transition-colors"
-      >
-        <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-        </svg>
-        <span class="text-gray-400 text-xs font-medium">ネタバレあり</span>
-        <span class="text-gray-500 text-xs mt-0.5">クリックで表示</span>
-      </div>
-      {% endif %}
     </div>
 
-    <!-- ゲーム情報（非スポイラー or 表示後） -->
-    <div class="p-3" x-show="shown" {% if game.is_spoiler %}x-cloak{% endif %}>
+    <!-- ゲーム情報（常時表示） -->
+    <div class="p-3">
       <div class="font-medium text-white text-sm leading-tight mb-1">{{ game.name }}</div>
       {% if game.release_year %}
       <div class="text-xs text-gray-400 mb-2">{{ game.release_year }}年</div>
       {% endif %}
       {% if game.comment %}
-      <p class="text-xs text-gray-300 leading-relaxed border-l-2 border-purple-700 pl-2 mt-2">{{ game.comment }}</p>
+        {% if game.is_spoiler %}
+        <!-- コメントのみスポイラーマスク -->
+        <p x-show="shown" x-cloak class="text-xs text-gray-300 leading-relaxed border-l-2 border-purple-700 pl-2 mt-2">{{ game.comment }}</p>
+        <button x-show="!shown" @click="shown = true" class="mt-2 text-xs text-gray-500 hover:text-gray-300 transition-colors">
+          ネタバレあり — クリックで表示
+        </button>
+        {% else %}
+        <p class="text-xs text-gray-300 leading-relaxed border-l-2 border-purple-700 pl-2 mt-2">{{ game.comment }}</p>
+        {% endif %}
       {% endif %}
     </div>
-
-    <!-- スポイラー時の折り畳み表示 -->
-    {% if game.is_spoiler %}
-    <div class="p-3" x-show="!shown">
-      <div class="text-gray-500 text-sm italic">ネタバレあり</div>
-    </div>
-    {% endif %}
   </div>
   {% endfor %}
 </div>
