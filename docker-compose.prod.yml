@@ -3,6 +3,8 @@
 
 services:
   caddy:
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
     volumes:
       - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
