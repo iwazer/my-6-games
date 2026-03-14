@@ -5,10 +5,14 @@ services:
   caddy:
     environment:
       DOMAIN: ${DOMAIN:-localhost}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.localhost}
     volumes:
       - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+
+  admin:
+    ports: !reset []  # 本番ではポートを外部に公開しない（Caddy 経由のみ）
 
   db:
     ports: !reset []  # 本番ではポートを外部に公開しない

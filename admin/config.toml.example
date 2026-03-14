@@ -1,0 +1,27 @@
+[server]
+port = 3000
+base_url = "https://admin.my-6-games.nullforge.app"
+
+[auth0]
+domain = "your-tenant.auth0.com"
+client_id = "xxxxxxxxxxxxxxxxxxxx"
+client_secret = "xxxxxxxxxxxxxxxxxxxx"
+
+[access]
+# 管理画面にアクセスを許可するメールアドレス
+allowed_emails = [
+    "admin@example.com",
+]
+
+# DATABASE_URL / REDIS_URL は docker-compose が .env から環境変数として注入するため
+# 通常はここに書かなくてよい。ローカルで docker-compose を使わずに直接起動する場合のみ記入。
+[database]
+url = ""
+
+[redis]
+url = ""
+
+[session]
+# openssl rand -base64 32 で生成
+secret_key = "32バイト以上のランダム文字列をここに設定"
+ttl_seconds = 86400
