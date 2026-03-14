@@ -15,6 +15,8 @@ start:
     docker compose up -d
 
 # コンテナを停止
+stop:
+    docker compose stop
 down:
     docker compose down
 

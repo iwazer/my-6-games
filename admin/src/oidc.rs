@@ -8,7 +8,8 @@ use openidconnect::{
 use crate::config::Config;
 
 pub async fn create_client(config: &Config) -> Result<CoreClient> {
-    let issuer_url = IssuerUrl::new(format!("https://{}", config.auth0.domain))
+    // Auth0 の issuer URI はトレイリングスラッシュ付き（例: https://xxx.auth0.com/）
+    let issuer_url = IssuerUrl::new(format!("https://{}/", config.auth0.domain))
         .map_err(|e| anyhow::anyhow!("IssuerURL の作成に失敗: {}", e))?;
 
     let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
