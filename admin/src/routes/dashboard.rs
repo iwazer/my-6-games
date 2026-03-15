@@ -17,9 +17,10 @@ pub async fn index(State(state): State<AppState>) -> Html<String> {
 
 async fn render(state: &AppState) -> anyhow::Result<String> {
     // 統計（総数・アクティブ数）
+    // SUM() は MariaDB で DECIMAL を返すため CAST で SIGNED に変換
     let stats_row = sqlx::query(
         "SELECT COUNT(*) AS total, \
-         COALESCE(SUM(CASE WHEN expires_at > NOW() THEN 1 ELSE 0 END), 0) AS active \
+         CAST(COALESCE(SUM(CASE WHEN expires_at > NOW() THEN 1 ELSE 0 END), 0) AS SIGNED) AS active \
          FROM shares",
     )
     .fetch_one(&state.db)
