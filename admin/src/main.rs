@@ -11,7 +11,11 @@ mod state;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::{middleware as axum_middleware, routing::get, Router};
+use axum::{
+    middleware as axum_middleware,
+    routing::{get, post},
+    Router,
+};
 use tera::Tera;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -55,6 +59,10 @@ async fn main() -> anyhow::Result<()> {
     // 認証が必要なルート
     let protected = Router::new()
         .route("/", get(routes::dashboard::index))
+        .route("/shares", get(routes::shares::list))
+        .route("/shares/:id", get(routes::shares::detail))
+        .route("/shares/:id", post(routes::shares::edit))
+        .route("/shares/:id/delete", post(routes::shares::delete))
         .route_layer(axum_middleware::from_fn_with_state(
             state.clone(),
             middleware::require_auth,
