@@ -15,12 +15,22 @@ start:
     docker compose up -d
 
 # コンテナを停止
+stop:
+    docker compose stop
 down:
     docker compose down
 
 # アプリログをストリーミング表示
 logs:
     docker compose logs -f app
+
+# 管理画面ログをストリーミング表示
+admin-logs:
+    docker compose logs -f admin
+
+# 管理画面ヘルスチェック
+admin-health:
+    curl -s http://localhost:3000/health
 
 # コンテナの状態確認
 ps:
@@ -31,18 +41,22 @@ ps:
 # コードをフォーマット（rustfmt）
 fmt:
     cd backend && cargo fmt
+    cd admin && cargo fmt
 
 # フォーマットチェックのみ（CI 用、ファイルを変更しない）
 fmt-check:
     cd backend && cargo fmt --check
+    cd admin && cargo fmt --check
 
 # Linter を実行（clippy、警告をエラーとして扱う）
 lint:
     cd backend && cargo clippy -- -D warnings
+    cd admin && cargo clippy -- -D warnings
 
 # 単体テストを実行
 test:
     cd backend && cargo test
+    cd admin && cargo test
 
 # ===== 動作確認 =====
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}管理画面{% endblock %} | my-6-games</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-gray-900 text-white px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <span class="font-bold">my-6-games 管理画面</span>
+            <a href="/" class="text-sm text-gray-400 hover:text-white">ダッシュボード</a>
+            <a href="/shares" class="text-sm text-gray-400 hover:text-white">共有一覧</a>
+        </div>
+        <a href="/auth/logout" class="text-sm text-gray-400 hover:text-white">ログアウト</a>
+    </nav>
+    <main class="container mx-auto px-6 py-8">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

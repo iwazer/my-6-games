@@ -1,0 +1,83 @@
+{% extends "base.html.tera" %}
+
+{% block title %}共有一覧{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">共有一覧</h1>
+    <span class="text-sm text-gray-500">{{ total }} 件</span>
+</div>
+
+{# 検索フォーム #}
+<form method="get" action="/shares" class="mb-6 flex gap-2">
+    <input type="text" name="q" value="{{ q }}" placeholder="作成者名で検索..."
+           class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <button type="submit"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg">
+        検索
+    </button>
+    {% if q %}
+    <a href="/shares" class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2">クリア</a>
+    {% endif %}
+</form>
+
+{# 一覧テーブル #}
+<div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+    {% if shares | length > 0 %}
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+            <tr class="text-left text-gray-500 border-b">
+                <th class="px-4 py-3 font-medium">ID</th>
+                <th class="px-4 py-3 font-medium">作成者</th>
+                <th class="px-4 py-3 font-medium">作成日時</th>
+                <th class="px-4 py-3 font-medium">有効期限</th>
+                <th class="px-4 py-3 font-medium">状態</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for share in shares %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-mono text-xs text-gray-600">{{ share.id }}</td>
+                <td class="px-4 py-3 text-gray-800">{{ share.creator }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ share.created_at }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ share.expires_at }}</td>
+                <td class="px-4 py-3">
+                    {% if share.is_active %}
+                    <span class="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">有効</span>
+                    {% else %}
+                    <span class="inline-block bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">期限切れ</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-right">
+                    <a href="/shares/{{ share.id }}"
+                       class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">詳細</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-gray-400 text-sm p-6">
+        {% if q %}「{{ q }}」に一致する共有がありません。{% else %}共有データがありません。{% endif %}
+    </p>
+    {% endif %}
+</div>
+
+{# ページネーション #}
+{% if total_pages > 1 %}
+<div class="flex items-center gap-2 justify-center">
+    {% if page > 1 %}
+    <a href="/shares?page={{ page - 1 }}{% if q %}&q={{ q }}{% endif %}"
+       class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">← 前</a>
+    {% endif %}
+
+    <span class="text-sm text-gray-500">{{ page }} / {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+    <a href="/shares?page={{ page + 1 }}{% if q %}&q={{ q }}{% endif %}"
+       class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">次 →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

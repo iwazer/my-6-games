@@ -1,0 +1,94 @@
+{% extends "base.html.tera" %}
+
+{% block title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold text-gray-800 mb-6">ダッシュボード</h1>
+
+{# 統計カード #}
+<div class="grid grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-sm text-gray-500 mb-1">総共有数</p>
+        <p class="text-3xl font-bold text-gray-800">{{ total }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-sm text-gray-500 mb-1">アクティブ</p>
+        <p class="text-3xl font-bold text-indigo-600">{{ active }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-sm text-gray-500 mb-1">期限切れ</p>
+        <p class="text-3xl font-bold text-gray-400">{{ expired }}</p>
+    </div>
+</div>
+
+{# 日別作成数グラフ #}
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-base font-semibold text-gray-700 mb-4">日別作成数（直近30日）</h2>
+    {% if chart_data | length > 0 %}
+    <canvas id="chart" height="80"></canvas>
+    {% else %}
+    <p class="text-gray-400 text-sm">この期間のデータがありません。</p>
+    {% endif %}
+</div>
+
+{# 最近の共有一覧 #}
+<div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-base font-semibold text-gray-700 mb-4">最近の共有</h2>
+    {% if recent_shares | length > 0 %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left text-gray-500 border-b">
+                    <th class="pb-2 pr-4 font-medium">ID</th>
+                    <th class="pb-2 pr-4 font-medium">作成者</th>
+                    <th class="pb-2 pr-4 font-medium">作成日時</th>
+                    <th class="pb-2 pr-4 font-medium">有効期限</th>
+                    <th class="pb-2 font-medium">状態</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for share in recent_shares %}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-2 pr-4 font-mono text-xs text-gray-600">{{ share.id }}</td>
+                    <td class="py-2 pr-4 text-gray-800">{{ share.creator }}</td>
+                    <td class="py-2 pr-4 text-gray-500">{{ share.created_at }}</td>
+                    <td class="py-2 pr-4 text-gray-500">{{ share.expires_at }}</td>
+                    <td class="py-2">
+                        {% if share.is_active %}
+                        <span class="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">有効</span>
+                        {% else %}
+                        <span class="inline-block bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">期限切れ</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-400 text-sm">共有データがありません。</p>
+    {% endif %}
+</div>
+
+{% if chart_data | length > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: {
+        labels: {{ chart_labels | json_encode() }},
+        datasets: [{
+            data: {{ chart_data | json_encode() }},
+            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+            borderColor: 'rgb(99, 102, 241)',
+            borderWidth: 1,
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1 } } }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
