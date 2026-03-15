@@ -60,9 +60,9 @@ async fn main() -> anyhow::Result<()> {
     let protected = Router::new()
         .route("/", get(routes::dashboard::index))
         .route("/shares", get(routes::shares::list))
-        .route("/shares/:id", get(routes::shares::detail))
-        .route("/shares/:id", post(routes::shares::edit))
-        .route("/shares/:id/delete", post(routes::shares::delete))
+        .route("/shares/{id}", get(routes::shares::detail))
+        .route("/shares/{id}", post(routes::shares::edit))
+        .route("/shares/{id}/delete", post(routes::shares::delete))
         .route_layer(axum_middleware::from_fn_with_state(
             state.clone(),
             middleware::require_auth,
